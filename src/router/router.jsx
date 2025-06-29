@@ -16,13 +16,17 @@ export const router = createBrowserRouter([
         index: true,
         Component: Home,
       },
-      {
-        path: 'sendparcel',
-        element: <PrivateRoute>
-              <SendParcel></SendParcel>
-        </PrivateRoute>,
-        loader: () => fetch('../assets/warehouses.json')
-      }
+{
+  path: 'sendparcel',
+  element: (
+    <PrivateRoute>
+      <SendParcel />
+    </PrivateRoute>
+  ),
+  loader: () =>
+    fetch('./warehouses.json'),
+}
+
     ]
   },
   {

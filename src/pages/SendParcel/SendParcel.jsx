@@ -1,18 +1,34 @@
-import React from 'react';
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useLoaderData } from "react-router";
 
 const SendParcel = () => {
-    const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const warehouses = useLoaderData(); // full JSON from loader
+
+
+// console.log("Loaded warehouses:", warehouses);
+
+  const { register, watch, handleSubmit } = useForm();
+
+  const [selectedRegion, setSelectedRegion] = useState("");
+
+  // ✅ Get unique regions (division list)
+
+const uniqueRegions = [...new Set(warehouses.map(w => w.region))].sort();
+
+  // ✅ Filter warehouses by selected region
+const getDistrictsByRegion = (region) =>
+  warehouses
+    .filter((w) => w.region === region)
+    .map((w) => w.district); // or w.district if that's the property
+
+  // 🔄 Watch form input
+  const regionSender = watch("sender_region");
+  const regionRec = watch("rec_region");
 
   const onSubmit = (data) => {
     console.log("Form Data:", data);
-    // Do something with the form data, like send to API
   };
-
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -70,14 +86,7 @@ const SendParcel = () => {
             placeholder="Sender Name"
             className="input input-bordered w-full mb-3"
           />
-          <select
-            {...register("senderWarehouse", { required: true })}
-            className="select select-bordered w-full mb-3"
-          >
-            <option value="">Select Wire house</option>
-            <option value="Warehouse A">Warehouse A</option>
-            <option value="Warehouse B">Warehouse B</option>
-          </select>
+
           <input
             {...register("senderAddress", { required: true })}
             type="text"
@@ -91,12 +100,27 @@ const SendParcel = () => {
             className="input input-bordered w-full mb-3"
           />
           <select
-            {...register("senderRegion", { required: true })}
-            className="select select-bordered w-full mb-3"
+            {...register("region")}
+            className="select select-bordered w-full"
+            onChange={(e) => setSelectedRegion(e.target.value)}
           >
-            <option value="">Select your region</option>
-            <option value="Dhaka">Dhaka</option>
-            <option value="Chattogram">Chattogram</option>
+            <option value="">Select Region</option>
+            {uniqueRegions.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
+          <select
+            {...register("warehouse")}
+            className="select select-bordered w-full"
+          >
+            <option value="">Select Warehouse</option>
+            {getDistrictsByRegion(regionSender).map((w) => (
+              <option key={w.id} value={w.name}>
+                {w.name}
+              </option>
+            ))}
           </select>
           <textarea
             {...register("pickupInstruction")}
@@ -114,14 +138,7 @@ const SendParcel = () => {
             placeholder="Receiver Name"
             className="input input-bordered w-full mb-3"
           />
-          <select
-            {...register("receiverWarehouse", { required: true })}
-            className="select select-bordered w-full mb-3"
-          >
-            <option value="">Select Wire house</option>
-            <option value="Warehouse A">Warehouse A</option>
-            <option value="Warehouse B">Warehouse B</option>
-          </select>
+
           <input
             {...register("receiverAddress", { required: true })}
             type="text"
@@ -135,12 +152,27 @@ const SendParcel = () => {
             className="input input-bordered w-full mb-3"
           />
           <select
-            {...register("receiverRegion", { required: true })}
-            className="select select-bordered w-full mb-3"
+            {...register("region")}
+            className="select select-bordered w-full"
+           
           >
-            <option value="">Select your region</option>
-            <option value="Dhaka">Dhaka</option>
-            <option value="Chattogram">Chattogram</option>
+            <option value="">Select Region</option>
+            {uniqueRegions.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
+          <select
+            {...register("warehouse")}
+            className="select select-bordered w-full"
+          >
+            <option value="">Select Warehouse</option>
+            {getDistrictsByRegion(regionRec).map((w) => (
+              <option key={w.id} value={w.name}>
+                {w.name}
+              </option>
+            ))}
           </select>
           <textarea
             {...register("deliveryInstruction")}
