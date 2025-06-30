@@ -1,33 +1,34 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { useLoaderData } from "react-router";
 
 const SendParcel = () => {
-  const warehouses = useLoaderData(); // full JSON from loader
+  const warehouses = useLoaderData();
+  const { register, handleSubmit, watch } = useForm();
 
+  const parcelType = watch("parcelType"); // 👈 Watch selected parcel type
+  const isNonDoc = parcelType === "non-doc"; // Boolean for enabling inputs
 
-// console.log("Loaded warehouses:", warehouses);
+  // 🔍 Watch sender & receiver region selections
+  const senderRegion = watch("senderRegion");
+  const receiverRegion = watch("receiverRegion");
 
-  const { register, watch, handleSubmit } = useForm();
+  // 🔁 Extract unique regions from warehouse list
+  const uniqueRegions = [...new Set(warehouses.map((w) => w.region))].sort();
 
-  const [selectedRegion, setSelectedRegion] = useState("");
-
-  // ✅ Get unique regions (division list)
-
-const uniqueRegions = [...new Set(warehouses.map(w => w.region))].sort();
-
-  // ✅ Filter warehouses by selected region
-const getDistrictsByRegion = (region) =>
-  warehouses
-    .filter((w) => w.region === region)
-    .map((w) => w.district); // or w.district if that's the property
-
-  // 🔄 Watch form input
-  const regionSender = watch("sender_region");
-  const regionRec = watch("rec_region");
+  // 📦 Get districts based on selected region
+  const getDistrictsByRegion = (region) => {
+    if (!region) return [];
+    return warehouses
+      .filter((w) => w.region === region)
+      .map((w) => ({
+        name: w.district,
+        id: `${w.region}-${w.district}`,
+      }));
+  };
 
   const onSubmit = (data) => {
-    console.log("Form Data:", data);
+    console.log("Parcel Data:", data);
   };
   return (
     <form
@@ -37,41 +38,48 @@ const getDistrictsByRegion = (region) =>
       <h2 className="text-2xl font-bold mb-6">Enter your parcel details</h2>
 
       {/* Radio Buttons */}
-      <div className="flex gap-6 mb-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            value="Document"
-            {...register("parcelType")}
-            className="radio checked:bg-green-500"
-            defaultChecked
-          />
-          <span>Document</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            value="Not-Document"
-            {...register("parcelType")}
-            className="radio"
-          />
-          <span>Not-Document</span>
-        </label>
-      </div>
+<div className="mb-6">
+  <label className="block mb-2 font-semibold">Parcel Type</label>
+  <div className="flex gap-6">
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        value="doc"
+        {...register("parcelType", { required: true })}
+        className="radio"
+      />
+      Doc
+    </label>
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        value="non-doc"
+        {...register("parcelType", { required: true })}
+        className="radio"
+      />
+      Non-Doc
+    </label>
+  </div>
+</div>
+
 
       {/* Parcel Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <input
-          {...register("parcelName", { required: "Parcel name is required" })}
+           {...register("parcelName", { required: true })}
           type="text"
           placeholder="Parcel Name"
           className="input input-bordered w-full"
+        
         />
         <input
-          {...register("parcelWeight", { required: "Weight is required" })}
+          {...register("parcelWeight", {
+            required: isNonDoc ? "Weight is required" : false,
+          })}
           type="text"
           placeholder="Parcel Weight (KG)"
           className="input input-bordered w-full"
+          disabled={!isNonDoc}
         />
       </div>
 
@@ -99,26 +107,37 @@ const getDistrictsByRegion = (region) =>
             placeholder="Sender Contact No"
             className="input input-bordered w-full mb-3"
           />
+          <label className="block mb-2 font-semibold">Select Region</label>
           <select
-            {...register("region")}
-            className="select select-bordered w-full"
-            onChange={(e) => setSelectedRegion(e.target.value)}
+            {...register("senderRegion", { required: true })}
+            className="select select-bordered w-full mb-4"
+            defaultValue=""
           >
-            <option value="">Select Region</option>
+            <option disabled value="">
+              -- Choose a Region --
+            </option>
             {uniqueRegions.map((region) => (
               <option key={region} value={region}>
                 {region}
               </option>
             ))}
           </select>
+
+          <label className="block mb-2 font-semibold">
+            Select District (Warehouse)
+          </label>
           <select
-            {...register("warehouse")}
-            className="select select-bordered w-full"
+            {...register("senderDistrict", { required: true })}
+            className="select select-bordered w-full mb-6"
+            disabled={!senderRegion}
+            defaultValue=""
           >
-            <option value="">Select Warehouse</option>
-            {getDistrictsByRegion(regionSender).map((w) => (
-              <option key={w.id} value={w.name}>
-                {w.name}
+            <option disabled value="">
+              -- Choose a District --
+            </option>
+            {getDistrictsByRegion(senderRegion).map((d) => (
+              <option key={d.id} value={d.name}>
+                {d.name}
               </option>
             ))}
           </select>
@@ -151,26 +170,37 @@ const getDistrictsByRegion = (region) =>
             placeholder="Receiver Contact No"
             className="input input-bordered w-full mb-3"
           />
+          <label className="block mb-2 font-semibold">Select Region</label>
           <select
-            {...register("region")}
-            className="select select-bordered w-full"
-           
+            {...register("receiverRegion", { required: true })}
+            className="select select-bordered w-full mb-4"
+            defaultValue=""
           >
-            <option value="">Select Region</option>
+            <option disabled value="">
+              -- Choose a Region --
+            </option>
             {uniqueRegions.map((region) => (
               <option key={region} value={region}>
                 {region}
               </option>
             ))}
           </select>
+
+          <label className="block mb-2 font-semibold">
+            Select District (Warehouse)
+          </label>
           <select
-            {...register("warehouse")}
-            className="select select-bordered w-full"
+            {...register("receiverDistrict", { required: true })}
+            className="select select-bordered w-full mb-6"
+            disabled={!receiverRegion}
+            defaultValue=""
           >
-            <option value="">Select Warehouse</option>
-            {getDistrictsByRegion(regionRec).map((w) => (
-              <option key={w.id} value={w.name}>
-                {w.name}
+            <option disabled value="">
+              -- Choose a District --
+            </option>
+            {getDistrictsByRegion(receiverRegion).map((d) => (
+              <option key={d.id} value={d.name}>
+                {d.name}
               </option>
             ))}
           </select>
