@@ -2,6 +2,43 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { useLoaderData } from "react-router";
 
+const calculateParcelPrice = ({ parcelType, weight, sameRegion }) => {
+  // Document
+  if (parcelType === "doc") {
+    return sameRegion ? 60 : 80;
+  }
+
+  // Non‑document
+  const w = Number(weight) || 0;
+  if (w <= 10) {
+    return sameRegion ? 110 : 150;
+  }
+
+  const extraKg = w - 10;
+  const extraCost = extraKg * 13;
+  const base = sameRegion ? 110 : 150;
+  const outsideSurcharge = sameRegion ? 0 : 40;
+
+  return base + extraCost + outsideSurcharge;
+};
+
+/* ───────── Custom hook ───────── */
+const useParcelPrice = (watch) => {
+  const parcelType = watch("parcelType");
+  const weight = watch("parcelWeight");
+  const senderDistrict = watch("senderDistrict");
+  const receiverDistrict = watch("receiverDistrict");
+
+  const sameRegion =
+    senderDistrict && receiverDistrict && senderDistrict === receiverDistrict;
+
+  return calculateParcelPrice({
+    parcelType,
+    weight,
+    sameRegion,
+  });
+};
+
 const SendParcel = () => {
   const warehouses = useLoaderData();
   const { register, handleSubmit, watch } = useForm();
@@ -12,6 +49,7 @@ const SendParcel = () => {
   // 🔍 Watch sender & receiver region selections
   const senderRegion = watch("senderRegion");
   const receiverRegion = watch("receiverRegion");
+  const price = useParcelPrice(watch);
 
   // 🔁 Extract unique regions from warehouse list
   const uniqueRegions = [...new Set(warehouses.map((w) => w.region))].sort();
@@ -38,45 +76,48 @@ const SendParcel = () => {
       <h2 className="text-2xl font-bold mb-6">Enter your parcel details</h2>
 
       {/* Radio Buttons */}
-<div className="mb-6">
-  <label className="block mb-2 font-semibold">Parcel Type</label>
-  <div className="flex gap-6">
-    <label className="flex items-center gap-2">
-      <input
-        type="radio"
-        value="doc"
-        {...register("parcelType", { required: true })}
-        className="radio"
-      />
-      Doc
-    </label>
-    <label className="flex items-center gap-2">
-      <input
-        type="radio"
-        value="non-doc"
-        {...register("parcelType", { required: true })}
-        className="radio"
-      />
-      Non-Doc
-    </label>
-  </div>
-</div>
-
+      <div className="mb-6">
+        <label className="block mb-2 font-semibold">Parcel Type</label>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              value="doc"
+              {...register("parcelType", { required: true })}
+              className="radio"
+            />
+            Doc
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              value="non-doc"
+              {...register("parcelType", { required: true })}
+              className="radio"
+            />
+            Non-Doc
+          </label>
+        </div>
+      </div>
 
       {/* Parcel Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <input
-           {...register("parcelName", { required: true })}
+          {...register("parcelName", {
+            required: "Parcel Name is required",
+          })}
           type="text"
           placeholder="Parcel Name"
           className="input input-bordered w-full"
-        
         />
+
         <input
           {...register("parcelWeight", {
-            required: isNonDoc ? "Weight is required" : false,
+            required: isNonDoc ? "Parcel Weight is required" : false,
           })}
-          type="text"
+          type="number"
+          step="0.01"
+          min="0"
           placeholder="Parcel Weight (KG)"
           className="input input-bordered w-full"
           disabled={!isNonDoc}
@@ -95,12 +136,6 @@ const SendParcel = () => {
             className="input input-bordered w-full mb-3"
           />
 
-          <input
-            {...register("senderAddress", { required: true })}
-            type="text"
-            placeholder="Address"
-            className="input input-bordered w-full mb-3"
-          />
           <input
             {...register("senderContact", { required: true })}
             type="text"
@@ -123,9 +158,7 @@ const SendParcel = () => {
             ))}
           </select>
 
-          <label className="block mb-2 font-semibold">
-            Select District (Warehouse)
-          </label>
+          <label className="block mb-2 font-semibold">Select District</label>
           <select
             {...register("senderDistrict", { required: true })}
             className="select select-bordered w-full mb-6"
@@ -141,6 +174,12 @@ const SendParcel = () => {
               </option>
             ))}
           </select>
+          <input
+            {...register("senderAddress", { required: true })}
+            type="text"
+            placeholder="Address"
+            className="input input-bordered w-full mb-3"
+          />
           <textarea
             {...register("pickupInstruction")}
             className="textarea textarea-bordered w-full"
@@ -158,12 +197,6 @@ const SendParcel = () => {
             className="input input-bordered w-full mb-3"
           />
 
-          <input
-            {...register("receiverAddress", { required: true })}
-            type="text"
-            placeholder="Receiver Address"
-            className="input input-bordered w-full mb-3"
-          />
           <input
             {...register("receiverContact", { required: true })}
             type="text"
@@ -204,6 +237,12 @@ const SendParcel = () => {
               </option>
             ))}
           </select>
+          <input
+            {...register("receiverAddress", { required: true })}
+            type="text"
+            placeholder="Receiver Address"
+            className="input input-bordered w-full mb-3"
+          />
           <textarea
             {...register("deliveryInstruction")}
             className="textarea textarea-bordered w-full"
@@ -213,6 +252,13 @@ const SendParcel = () => {
       </div>
 
       <p className="text-sm mt-4 mb-6">* PickUp Time 4pm-7pm Approx.</p>
+
+      <div className="text-lg font-medium">
+        Estimated Price:&nbsp;
+        <span className="badge badge-outline badge-lg">
+          ৳ {price.toFixed(0)}
+        </span>
+      </div>
 
       <button type="submit" className="btn btn-success w-full md:w-auto">
         Proceed to Confirm Booking
