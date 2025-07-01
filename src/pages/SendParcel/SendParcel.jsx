@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { useLoaderData } from "react-router";
 import Swal from "sweetalert2";
 import useAuth from "../../hooks/useAuth";
+import useAaxiosSecure from "../../hooks/useAxiosSecure";
+
 const calculateParcelPrice = ({ parcelType, weight, sameRegion }) => {
   const w = Number(weight) || 0;
 
@@ -54,6 +56,7 @@ const useParcelPrice = (watch) => {
 
 const SendParcel = () => {
   const { user } = useAuth();
+  const axiosSecure = useAaxiosSecure();
 
   const warehouses = useLoaderData();
   const { register, handleSubmit, watch } = useForm();
@@ -92,6 +95,19 @@ const SendParcel = () => {
       sameRegion,
     });
 
+    const parcelData = {
+      ...data,
+      createdAt: new Date().toISOString(), // UTC time
+      paymentStatus: "unpaid", // or "paid" if using a gateway
+      status: "pending", // or "booked", "shipped", etc.
+      user: {
+        name: user?.displayName || "Unknown",
+        email: user?.email,
+        uid: user?.uid,
+      },
+      price: total,
+    };
+
     Swal.fire({
       title: "Confirm Parcel Details",
       icon: "info",
@@ -114,24 +130,23 @@ const SendParcel = () => {
       confirmButtonText: "Yes, Send it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        const parcelData = {
-          ...data,
-          createdAt: new Date().toISOString(), // UTC time
-          paymentStatus: "unpaid", // or "paid" if using a gateway
-          status: "pending", // or "booked", "shipped", etc.
-          user: {
-            name: user?.displayName || "Unknown",
-            email: user?.email,
-            uid: user?.uid,
-          },
-          price: total,
-        };
-        console.log(parcelData);
-        Swal.fire({
-          title: "Submited!",
-          text: "Your Parcel is received.",
-          icon: "success",
-        });
+        // 🚀 Send data to backend (replace with your API)
+        axiosSecure
+          .post("/api/parcels", parcelData)
+          .then((res) => {
+            console.log(res.data.insertedId);
+            if (res.data.insertedId) {
+              Swal.fire({
+                title: "Submitted!",
+                text: "Your parcel booking was successful.",
+                icon: "success",
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Submission failed", error);
+            Swal.fire("Error", "Something went wrong.", "error");
+          });
       }
     });
   };
