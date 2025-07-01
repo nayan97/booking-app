@@ -1,25 +1,38 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useLoaderData } from "react-router";
-
+import Swal from "sweetalert2";
+import useAuth from "../../hooks/useAuth";
 const calculateParcelPrice = ({ parcelType, weight, sameRegion }) => {
+  const w = Number(weight) || 0;
+
   // Document
   if (parcelType === "doc") {
-    return sameRegion ? 60 : 80;
+    const base = 60;
+    const outsideSurcharge = sameRegion ? 0 : 20;
+    const total = base + outsideSurcharge;
+    return {
+      base,
+      outsideSurcharge,
+      extra: 0,
+      total,
+    };
   }
 
-  // Non‑document
-  const w = Number(weight) || 0;
-  if (w <= 10) {
-    return sameRegion ? 110 : 150;
-  }
-
-  const extraKg = w - 10;
-  const extraCost = extraKg * 13;
-  const base = sameRegion ? 110 : 150;
+  // Non-document
+  const base = 110;
   const outsideSurcharge = sameRegion ? 0 : 40;
+  const extraKg = w > 10 ? w - 10 : 0;
+  const extra = extraKg * 13;
 
-  return base + extraCost + outsideSurcharge;
+  const total = base + extra + outsideSurcharge;
+
+  return {
+    base,
+    extra,
+    total,
+    outsideSurcharge,
+  };
 };
 
 /* ───────── Custom hook ───────── */
@@ -40,6 +53,8 @@ const useParcelPrice = (watch) => {
 };
 
 const SendParcel = () => {
+  const { user } = useAuth();
+
   const warehouses = useLoaderData();
   const { register, handleSubmit, watch } = useForm();
 
@@ -49,7 +64,9 @@ const SendParcel = () => {
   // 🔍 Watch sender & receiver region selections
   const senderRegion = watch("senderRegion");
   const receiverRegion = watch("receiverRegion");
-  const price = useParcelPrice(watch);
+  const total = useParcelPrice(watch);
+
+  console.log(total);
 
   // 🔁 Extract unique regions from warehouse list
   const uniqueRegions = [...new Set(warehouses.map((w) => w.region))].sort();
@@ -65,8 +82,58 @@ const SendParcel = () => {
       }));
   };
 
-  const onSubmit = (data) => {
-    console.log("Parcel Data:", data);
+  const onSubmit = async (data) => {
+    const { parcelType, parcelWeight, senderDistrict, receiverDistrict } = data;
+    const sameRegion = senderDistrict === receiverDistrict;
+
+    const { base, extra, total, outsideSurcharge } = calculateParcelPrice({
+      parcelType,
+      weight: parcelWeight,
+      sameRegion,
+    });
+
+    Swal.fire({
+      title: "Confirm Parcel Details",
+      icon: "info",
+      html: `
+    <div class="text-left space-y-2 text-sm">
+      <p><span class="font-semibold">Parcel Type:</span> <span class="badge badge-info">${parcelType}</span></p>
+      <p><span class="font-semibold">Weight:</span> <span class="badge badge-outline">${
+        parcelWeight || "N/A"
+      } kg</span></p>
+      <p><span class="font-semibold">Base Cost:</span> <span class="text-green-600 font-medium">৳ ${base}</span></p>
+      <p><span class="font-semibold">Extra Cost:</span> <span class="text-orange-600 font-medium">৳ ${extra}</span></p>
+        <p><span class="font-semibold">Out of City:</span> <span class="text-orange-600 font-medium">৳ ${outsideSurcharge}</span></p>
+      <hr class="my-2 border-gray-300"/>
+      <p><span class="font-bold text-lg">Total:</span> <span class="badge badge-success text-lg">৳ ${total}</span></p>
+    </div>
+  `,
+      showCancelButton: true,
+      confirmButtonColor: "#16a34a",
+      cancelButtonColor: "#dc2626",
+      confirmButtonText: "Yes, Send it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const parcelData = {
+          ...data,
+          createdAt: new Date().toISOString(), // UTC time
+          paymentStatus: "unpaid", // or "paid" if using a gateway
+          status: "pending", // or "booked", "shipped", etc.
+          user: {
+            name: user?.displayName || "Unknown",
+            email: user?.email,
+            uid: user?.uid,
+          },
+          price: total,
+        };
+        console.log(parcelData);
+        Swal.fire({
+          title: "Submited!",
+          text: "Your Parcel is received.",
+          icon: "success",
+        });
+      }
+    });
   };
   return (
     <form
@@ -252,13 +319,6 @@ const SendParcel = () => {
       </div>
 
       <p className="text-sm mt-4 mb-6">* PickUp Time 4pm-7pm Approx.</p>
-
-      <div className="text-lg font-medium">
-        Estimated Price:&nbsp;
-        <span className="badge badge-outline badge-lg">
-          ৳ {price.toFixed(0)}
-        </span>
-      </div>
 
       <button type="submit" className="btn btn-success w-full md:w-auto">
         Proceed to Confirm Booking
