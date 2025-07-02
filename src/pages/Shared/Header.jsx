@@ -18,13 +18,10 @@ const Header = () => {
       <li>
         <NavLink to="/">Home</NavLink>
       </li>
-      {user && (
-        <>
-          <li>
-            <NavLink to="sendparcel">Send Parcel</NavLink>
-          </li>
-        </>
-      )}
+      <li>
+        <NavLink to="sendparcel">Send Parcel</NavLink>
+      </li>
+      {user && <></>}
     </>
   );
 
@@ -75,14 +72,14 @@ const Header = () => {
             </>
           ) : (
             <>
-                <div className="flex gap-2">
-                         <NavLink className="btn" to="/login">
-                Login
-              </NavLink>
-              <NavLink className="btn btn-success text-white" to="/register">
-                Register
-              </NavLink>
-                </div>
+              <div className="flex gap-2">
+                <NavLink className="btn" to="/login">
+                  Login
+                </NavLink>
+                <NavLink className="btn btn-success text-white" to="/register">
+                  Register
+                </NavLink>
+              </div>
             </>
           )}
         </div>
