@@ -1,9 +1,13 @@
 import React from "react";
 import { Menu } from "lucide-react";
 
+
 const Navbar = ({ toggleSidebar }) => {
+    // const { user } = useAuth();
+    // console.log(user);
+    
   return (
-    <div className="navbar bg-base-100 border-b justify-between px-4">
+    <div className="navbar bg-black border-b justify-between px-4 text-white">
       <button onClick={toggleSidebar} className="btn btn-ghost">
         <Menu />
       </button>

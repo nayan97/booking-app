@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Body from "../pages/Backend/Body";
 import Sidebar from "../pages/Backend/Sidebar";
 import Navbar from "../pages/Backend/Navbar";
+import { Outlet } from "react-router";
 
 
 
@@ -10,15 +10,18 @@ const DashboardLayout = () => {
 
   return (
     <>
-      <div className="flex h-screen max-w-6xl mx-auto">
+    <div className=" bg-black">
+            <div className="flex h-screen max-w-7xl mx-auto bg-blue-950 border border-blue-950">
         <Sidebar isOpen={sidebarOpen} />
         <div className="flex-1 flex flex-col">
           <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
           <main className="p-4 flex-1 overflow-y-auto">
-            <Body></Body>
+            <Outlet></Outlet>
           </main>
         </div>
       </div>
+    </div>
+
     </>
   );
 }

@@ -15,14 +15,14 @@ import {
 
 const Sidebar = ({ isOpen }) => {
   return (
-    <aside className={`bg-base-200 h-full p-4 transition-all duration-300 ${isOpen ? "w-64" : "w-20"} overflow-hidden`}>
+    <aside className={`bg-black text-white h-full p-4 transition-all duration-300 ${isOpen ? "w-64" : "w-20"} overflow-hidden`}>
       <div className="space-y-2">
-        <NavLink to="/" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
+        <NavLink to="/dashboard" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <LayoutDashboard className="w-5 h-5" />
           {isOpen && <span>Dashboard</span>}
         </NavLink>
 
-        <NavLink to="/categories" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
+        {/* <NavLink to="/categories" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <FileText className="w-5 h-5" />
           {isOpen && <span>Category</span>}
         </NavLink>
@@ -40,19 +40,19 @@ const Sidebar = ({ isOpen }) => {
         <NavLink to="/products" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <Tag className="w-5 h-5" />
           {isOpen && <span>Products</span>}
-        </NavLink>
+        </NavLink> */}
 
         <NavLink to="/shipping" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <Truck className="w-5 h-5" />
           {isOpen && <span>Shipping</span>}
         </NavLink>
 
-        <NavLink to="/orders" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
+        <NavLink to="/dashboard/myparcels" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <ShoppingBag className="w-5 h-5" />
-          {isOpen && <span>Orders</span>}
+          {isOpen && <span>My Parcels</span>}
         </NavLink>
 
-        <NavLink to="/discount" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
+        {/* <NavLink to="/discount" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <Percent className="w-5 h-5" />
           {isOpen && <span>Discount</span>}
         </NavLink>
@@ -65,7 +65,7 @@ const Sidebar = ({ isOpen }) => {
         <NavLink to="/pages" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <File className="w-5 h-5" />
           {isOpen && <span>Pages</span>}
-        </NavLink>
+        </NavLink> */}
       </div>
     </aside>
   );
