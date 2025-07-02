@@ -10,8 +10,8 @@ const DashboardLayout = () => {
 
   return (
     <>
-    <div className=" bg-black">
-            <div className="flex h-screen max-w-7xl mx-auto bg-blue-950 border border-blue-950">
+    <div className="">
+            <div className="flex h-screen max-w-7xl mx-auto bg-amber-50 border border-blue-950">
         <Sidebar isOpen={sidebarOpen} />
         <div className="flex-1 flex flex-col">
           <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />

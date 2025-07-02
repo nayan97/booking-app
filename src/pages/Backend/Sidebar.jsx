@@ -15,7 +15,7 @@ import {
 
 const Sidebar = ({ isOpen }) => {
   return (
-    <aside className={`bg-black text-white h-full p-4 transition-all duration-300 ${isOpen ? "w-64" : "w-20"} overflow-hidden`}>
+    <aside className={`bg-[#ddd]  h-full p-4 transition-all duration-300 ${isOpen ? "w-64" : "w-20"} overflow-hidden`}>
       <div className="space-y-2">
         <NavLink to="/dashboard" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <LayoutDashboard className="w-5 h-5" />
