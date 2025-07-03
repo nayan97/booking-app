@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import Swal from "sweetalert2";
 
 const MyParcels = () => {
@@ -17,11 +17,17 @@ const MyParcels = () => {
       return res.data;
     },
   });
+  const navigate = useNavigate();
   //   console.log(parcels);
+  const handlePay = (id) => {
+    console.log("ipayment:", id);
+    navigate(`/dashboard/payment/${id}`)
+    
+  }
 
   //
   const handleDelete = (id) => {
-    console.log(id);
+    // console.log(id);
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -77,8 +83,8 @@ const MyParcels = () => {
                 <td>Red</td>
                 <td>
                   <Link>
-                    <button className="btn btn-warning btn-sm mx-1">
-                      Edit
+                    <button  onClick={() => handlePay(parcel._id)} className="btn btn-warning btn-sm mx-1">
+                      PAy
                     </button>
                   </Link>
                   <button
