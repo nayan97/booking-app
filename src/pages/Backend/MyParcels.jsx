@@ -17,6 +17,7 @@ const MyParcels = () => {
       return res.data;
     },
   });
+  
   const navigate = useNavigate();
   //   console.log(parcels);
   const handlePay = (id) => {
