@@ -4,6 +4,7 @@ import { useParams } from "react-router";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { useQuery } from "@tanstack/react-query";
 import Spinner from "../../../components/Spinner";
+import Swal from "sweetalert2";
 
 const CheckoutForm = () => {
   const stripe = useStripe();
@@ -11,23 +12,25 @@ const CheckoutForm = () => {
   const { parcelId } = useParams();
   console.log(parcelId);
 
-   const axiosSecure = useAxiosSecure();
-  
+  const axiosSecure = useAxiosSecure();
 
-  const [error, setError] = useState('')
+  const [error, setError] = useState("");
 
-    const { data: parcels = [], isPenning } = useQuery({
+  const { data: parcels = [], isPenning } = useQuery({
     queryKey: ["my-parcels", parcelId],
     queryFn: async () => {
       const res = await axiosSecure.get(`api/parcels/${parcelId}`);
       return res.data;
     },
-  })
-  if (isPenning){
-    return <Spinner></Spinner>
+  });
+  if (isPenning) {
+    return <Spinner></Spinner>;
   }
-  console.log(parcels);
-  
+  // console.log(parcels);
+  const amount = parcels.price;
+  const amountsInCents = amount * 100;
+
+  console.log(amountsInCents);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,12 +45,39 @@ const CheckoutForm = () => {
     });
 
     if (error) {
-     setError(error.message)
-     
+      setError(error.message);
     } else {
-       setError('');
+      setError("");
       console.log("[PaymentMethod]", paymentMethod);
     }
+
+    // send amount
+    const res = await axiosSecure
+      .post("/api/create-payment-intent", { amount: amountsInCents, parcelId })
+      // console.log(res);
+      const clientSecret = res.data.clientSecret;
+   // Step 2: Confirm the payment using Stripe
+  const { paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+    payment_method: {
+      card: card,
+      billing_details: {
+        // Optionally include billing details
+        name: "Customer Name",
+        email: "customer@example.com",
+      },
+    },
+  });
+      
+
+    
+  // Step 3: Handle result
+  if (error) {
+    console.error("Payment error:", error);
+    Swal.fire("Error", error.message, "error");
+  } else if (paymentIntent.status === "succeeded") {
+    Swal.fire("Success!", "Payment completed successfully!", "success");
+    // ✅ Optionally: Update your parcel status in DB here
+  }
   };
 
   return (
@@ -81,18 +111,16 @@ const CheckoutForm = () => {
             type="submit"
             disabled={!stripe}
             className="inline-block btn btn-sm pb-10 w-full leading-10 px-4 rounded
-                   bg-[#CAEB68] text-white uppercase tracking-[0.025em]
-                   text-[12px] font-semibold shadow-md
+                   bg-[#CAEB68] font-bold uppercase tracking-[0.025em]
+                   text-[12px] shadow-md
                    transition-all duration-150
                    hover:-translate-y-[1px] hover:bg-[#8deb68b3]
                    hover:shadow-[0_7px_14px_rgba(50,50,93,0.10),0_3px_6px_rgba(0,0,0,0.08)]
                    disabled:opacity-60"
           >
-            Pay For Parcel Pickup
+            Pay ${amount}
           </button>
-          {
-            error && <p className="text-red-600 pt-2">{error}</p>
-          }
+          {error && <p className="text-red-600 pt-2">{error}</p>}
         </div>
       </div>
 
