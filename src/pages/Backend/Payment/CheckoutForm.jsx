@@ -1,12 +1,14 @@
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import React, { useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { useQuery } from "@tanstack/react-query";
 import Spinner from "../../../components/Spinner";
 import Swal from "sweetalert2";
+import useAuth from "../../../hooks/useAuth";
 
 const CheckoutForm = () => {
+  const { user } = useAuth();
   const stripe = useStripe();
   const elements = useElements();
   const { parcelId } = useParams();
@@ -15,6 +17,8 @@ const CheckoutForm = () => {
   const axiosSecure = useAxiosSecure();
 
   const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   const { data: parcels = [], isPenning } = useQuery({
     queryKey: ["my-parcels", parcelId],
@@ -52,32 +56,46 @@ const CheckoutForm = () => {
     }
 
     // send amount
-    const res = await axiosSecure
-      .post("/api/create-payment-intent", { amount: amountsInCents, parcelId })
-      // console.log(res);
-      const clientSecret = res.data.clientSecret;
-   // Step 2: Confirm the payment using Stripe
-  const { paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-    payment_method: {
-      card: card,
-      billing_details: {
-        // Optionally include billing details
-        name: "Customer Name",
-        email: "customer@example.com",
+    const res = await axiosSecure.post("/api/create-payment-intent", {
+      amount: amountsInCents,
+      parcelId,
+    });
+    // console.log(res);
+    const clientSecret = res.data.clientSecret;
+    // Step 2: Confirm the payment using Stripe
+    const { paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: card,
+        billing_details: {
+          // Optionally include billing details
+          name: user.displayName,
+          email: user.email,
+        },
       },
-    },
-  });
-      
+    });
 
-    
-  // Step 3: Handle result
-  if (error) {
-    console.error("Payment error:", error);
-    Swal.fire("Error", error.message, "error");
-  } else if (paymentIntent.status === "succeeded") {
-    Swal.fire("Success!", "Payment completed successfully!", "success");
-    // ✅ Optionally: Update your parcel status in DB here
-  }
+    // Step 3: Handle result
+    if (error) {
+      console.error("Payment error:", error);
+      Swal.fire("Error", error.message, "error");
+    } else if (paymentIntent.status === "succeeded") {
+      Swal.fire("Success!", "Payment completed successfully!", "success");
+
+      // ✅ Optionally: Update your parcel status in DB here
+
+      await axiosSecure.post("/api/payment-success", {
+        parcelId,
+        amount,
+        transactionId: paymentIntent.id,
+        paymentMethod: paymentIntent.payment_method_types,
+        user: {
+          uid: user.uid,
+          name: user.name,
+          email: user.email,
+        },
+      });
+      navigate("/dashboard/myparcels");
+    }
   };
 
   return (

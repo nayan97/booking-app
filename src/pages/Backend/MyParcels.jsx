@@ -17,14 +17,13 @@ const MyParcels = () => {
       return res.data;
     },
   });
-  
+
   const navigate = useNavigate();
   //   console.log(parcels);
   const handlePay = (id) => {
     console.log("ipayment:", id);
-    navigate(`/dashboard/payment/${id}`)
-    
-  }
+    navigate(`/dashboard/payment/${id}`);
+  };
 
   //
   const handleDelete = (id) => {
@@ -49,9 +48,9 @@ const MyParcels = () => {
                 icon: "success",
               });
             }
-            refetch(); 
-        })
-        
+            refetch();
+          })
+
           .catch((err) => {
             console.error(err);
             Swal.fire("Error!", "Failed to delete parcel.", "error");
@@ -80,12 +79,24 @@ const MyParcels = () => {
               <tr key={parcel._id}>
                 <th>{index + 1}</th>
                 <td>{parcel.parcelName}</td>
-                <td>Tax Accountant</td>
+                <td
+                  className={`badge ${
+                    parcel.paymentStatus === "paid"
+                      ? "badge-success"
+                      : "badge-warning"
+                  }`}
+                >
+                  {parcel.paymentStatus}
+                </td>
                 <td>Red</td>
                 <td>
                   <Link>
-                    <button  onClick={() => handlePay(parcel._id)} className="btn btn-warning btn-sm mx-1">
-                      PAy
+                    <button
+                      onClick={() => handlePay(parcel._id)}
+                      className="btn btn-warning btn-sm mx-1"
+                      disabled={parcel.paymentStatus === "paid"}
+                    >
+                      Pay
                     </button>
                   </Link>
                   <button
