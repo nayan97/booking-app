@@ -10,6 +10,7 @@ import DashboardLayout from "../Layouts/DashboardLayout";
 import MyParcels from "../pages/Backend/MyParcels";
 import Body from "../pages/Backend/Body";
 import Payment from "../pages/Backend/Payment/Payment";
+import PaymentHistroy from "../pages/Backend/PaymentHistroy/PaymentHistroy";
 
 export const router = createBrowserRouter([
   {
@@ -61,11 +62,15 @@ export const router = createBrowserRouter([
         path: 'myparcels',
         Component: MyParcels,
 
-      }
-      ,
+      },
       {
         path: 'payment/:parcelId',
         Component: Payment,
+
+      },
+      {
+        path: 'payment_histroy',
+        Component: PaymentHistroy,
 
       }
     ],

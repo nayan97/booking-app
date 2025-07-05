@@ -51,11 +51,12 @@ const Sidebar = ({ isOpen }) => {
           <ShoppingBag className="w-5 h-5" />
           {isOpen && <span>My Parcels</span>}
         </NavLink>
-
-        {/* <NavLink to="/discount" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
+        <NavLink to="/dashboard/payment_histroy" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <Percent className="w-5 h-5" />
-          {isOpen && <span>Discount</span>}
+          {isOpen && <span>Payment Histroy</span>}
         </NavLink>
+
+        {/* 
 
         <NavLink to="/users" className="flex items-center gap-3 p-2 rounded hover:bg-base-300">
           <Users className="w-5 h-5" />

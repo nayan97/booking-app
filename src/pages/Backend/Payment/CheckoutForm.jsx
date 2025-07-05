@@ -13,6 +13,7 @@ const CheckoutForm = () => {
   const elements = useElements();
   const { parcelId } = useParams();
   console.log(parcelId);
+  console.log(0.1 + 0.2 === 0.3);
 
   const axiosSecure = useAxiosSecure();
 
