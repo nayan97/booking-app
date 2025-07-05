@@ -3,10 +3,12 @@ import { useForm } from "react-hook-form";
 import useAuth from "../../hooks/useAuth";
 import axios from "axios";
 import { useState } from "react";
+import useAxios from "../../hooks/useAxios";
 
 
 const Registar = () => {
   const { createUser, updateUserProfile } = useAuth();
+  const axiosUserSecure = useAxios();
 
   
   const {
@@ -18,25 +20,43 @@ const Registar = () => {
   const [profilePic, setProfilePic] = useState('')
 
 
-  const onSubmit = (data) => {
-  console.log(data);
+const onSubmit = (data) => {
+  // console.log(data);
+
   createUser(data.email, data.password)
-    .then((result) => {
+    .then(async (result) => {
       console.log(result.user);
 
-      // ✅ Call the profile updater with separate args
+      const userInfo = {
+        email: data.email,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        last_signin_at: new Date().toISOString()
+      };
+
+      try {
+        const userRes = await axiosUserSecure.post('/api/users', userInfo);
+        console.log(userRes.data);
+      } catch (err) {
+        console.error('Error saving user to DB:', err.response?.data || err.message);
+        // Optionally, notify user or exit early here
+        return;
+      }
+
+      // ✅ Update profile only if DB insertion succeeds
       updateUserProfile(data.name, profilePic)
         .then(() => {
           console.log('Profile updated');
         })
         .catch((error) => {
-          console.error(error);
+          console.error('Error updating profile:', error);
         });
     })
     .catch((error) => {
-      console.error(error);
+      console.error('Error creating user:', error);
     });
 };
+
 
   const handlePhotoUpload = async (e) => {
     const img = e.target.files[0];
