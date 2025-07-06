@@ -11,6 +11,7 @@ import MyParcels from "../pages/Backend/MyParcels";
 import Body from "../pages/Backend/Body";
 import Payment from "../pages/Backend/Payment/Payment";
 import PaymentHistroy from "../pages/Backend/PaymentHistroy/PaymentHistroy";
+import AddRider from "../pages/Riders/AddRider";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,14 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: Home,
+      },
+      {
+        path: "addrider",
+        element: (
+          <PrivateRoute>
+            <AddRider />
+          </PrivateRoute>
+        ),
       },
       {
         path: "sendparcel",
