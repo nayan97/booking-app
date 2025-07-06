@@ -4,6 +4,7 @@ import useAuth from "../../hooks/useAuth";
 import axios from "axios";
 import { useState } from "react";
 import useAxios from "../../hooks/useAxios";
+import Social from "../../pages/Auth/Social"
 
 
 const Registar = () => {
@@ -138,7 +139,7 @@ const onSubmit = (data) => {
               </p>
             </fieldset>
           </form>
-          {/* <Social></Social> */}
+          <Social></Social>
         </div>
       </div>
     </div>

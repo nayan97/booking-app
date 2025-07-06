@@ -1,8 +1,12 @@
 import React from "react";
 import useAuth from "../../hooks/useAuth";
 import { useLocation, useNavigate } from "react-router";
+import useAxios from "../../hooks/useAxios";
 
 const Social = () => {
+
+  const axiosUserSecure = useAxios();
+
   const { loginWithGoogle } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -11,8 +15,26 @@ const Social = () => {
 
   const handleGoogleLogin = () => {
     loginWithGoogle()
-      .then((result) => {
+      .then( async(result) => {
         console.log(result);
+        const user = result.user;
+
+        const userInfo = {
+          email: user.email,
+          role: "user",
+          created_at: new Date().toISOString(),
+          last_signin_at: new Date().toISOString(),
+        };
+
+             try {
+        const userRes = await axiosUserSecure.post('/api/users', userInfo);
+        console.log(userRes.data);
+      } catch (err) {
+        console.error('Error saving user to DB:', err.response?.data || err.message);
+        // Optionally, notify user or exit early here
+        return;
+      }
+
         navigate(from);
       })
       .catch((error) => {
