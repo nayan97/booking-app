@@ -1,11 +1,14 @@
 // src/pages/AddRider.jsx
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import useAuth from "../../hooks/useAuth";
+import useAaxiosSecure from "../../hooks/useAxiosSecure";
+
+import Swal from "sweetalert2";
 
 const AddRider = () => {
   const { user } = useAuth(); // { displayName, email, ... }
+    const axiosSecure = useAaxiosSecure();
   const {
     register,
     handleSubmit,
@@ -21,35 +24,54 @@ const AddRider = () => {
   const [loading, setLoading] = useState(false);
 
   // ──────────────────────────────────────────────────────────────────────────────
-  const onSubmit = async (data) => {
-    setLoading(true);
-
-    // Build FormData so that image/file fields upload properly
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      // File inputs arrive as FileList; grab first file if it exists
-      if (value instanceof FileList) {
-        if (value.length) formData.append(key, value[0]);
-      } else {
-        formData.append(key, value);
-      }
-    });
-
-    try {
-      // ⬇️ POST to your API endpoint
-      const res = await axios.post("/api/riders", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      console.log(res.data);
-      alert("Application received! We’ll be in touch soon.");
-      reset();
-    } catch (err) {
-      console.error(err);
-      alert("Sorry, something went wrong.");
-    } finally {
-      setLoading(false);
-    }
+const onSubmit = (data) => {
+  // Add extra metadata
+  const riderData = {
+    ...data,
+    createdAt: new Date().toISOString(),
+    status: "pending",
+    approved: false,
+    user: {
+      name: user?.displayName || "Unknown",
+      email: user?.email || "unknown@example.com",
+      uid: user?.uid || "anonymous",
+    },
   };
+
+  // Show confirmation before submit
+  Swal.fire({
+    title: "Confirm Submission",
+    text: "Are you sure you want to apply as a rider?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Yes, Submit",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // POST the rider data to the backend
+      axiosSecure
+        .post("/api/riders", riderData)
+        .then((res) => {
+          if (res.data.insertedId) {
+            Swal.fire({
+              title: "Success!",
+              text: "Your rider application has been submitted.",
+              icon: "success",
+            });
+            reset();
+          } else {
+            Swal.fire("Error", "Could not submit your application.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Submission failed", error);
+          Swal.fire("Error", "Something went wrong.", "error");
+        });
+    }
+  });
+};
+
+
+
   // ──────────────────────────────────────────────────────────────────────────────
 
   return (
@@ -195,8 +217,8 @@ const AddRider = () => {
         </fieldset>
 
         {/* ── DOCUMENTS ────────────────────────────────────────────────────── */}
-        <fieldset className="grid md:grid-cols-2 gap-6">
-          {/* NID image */}
+        {/* <fieldset className="grid md:grid-cols-2 gap-6">
+       
           <div>
             <label className="label">NID Image *</label>
             <input
@@ -210,7 +232,6 @@ const AddRider = () => {
             )}
           </div>
 
-          {/* License image */}
           <div>
             <label className="label">License Image *</label>
             <input
@@ -228,7 +249,7 @@ const AddRider = () => {
             )}
           </div>
 
-          {/* Profile picture */}
+  
           <div className="md:col-span-2">
             <label className="label">Profile Picture *</label>
             <input
@@ -245,7 +266,7 @@ const AddRider = () => {
               </p>
             )}
           </div>
-        </fieldset>
+        </fieldset> */}
 
         {/* ── BANK INFO ────────────────────────────────────────────────────── */}
         <fieldset className="grid md:grid-cols-2 gap-6">
@@ -305,7 +326,7 @@ const AddRider = () => {
         </fieldset>
 
         {/* ── SUBMIT ───────────────────────────────────────────────────────── */}
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button type="submit" className="btn bg-[#CAEB66] w-full" disabled={loading}>
           {loading ? "Submitting…" : "Apply Now"}
         </button>
       </form>
